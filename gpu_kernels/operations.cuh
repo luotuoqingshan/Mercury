@@ -309,6 +309,19 @@ __forceinline__ __device__ T intersect_num_hybrid(T* a, T size_a, T* b, T size_b
   return count;
 }
 
+// Helper function for atomicAdd that works with both 32-bit and 64-bit types
+template <typename T>
+__forceinline__ __device__ T atomic_add_helper(T* addr, int val) {
+  // For 64-bit types, CUDA atomicAdd requires unsigned long long
+  // For smaller types, use regular atomicAdd
+  // This compile-time check is optimized away by the compiler
+  if (sizeof(T) == 8) {
+    return (T)atomicAdd((unsigned long long*)addr, (unsigned long long)val);
+  } else {
+    return atomicAdd(addr, val);
+  }
+}
+
 // set intersection using warp-based HINDEX
 template <typename T = vidType>
 __forceinline__ __device__ T intersect_warp_hindex(T *a, T size_a, T *b, T size_b, T* bins, T* bin_counts) {
@@ -338,7 +351,7 @@ __forceinline__ __device__ T intersect_warp_hindex(T *a, T size_a, T *b, T size_
   for (auto i = thread_lane; i < lookup_size; i += WARP_SIZE) {
     auto vid = lookup[i];
     T key = vid % NUM_BUCKETS; // hash
-    T index = atomicAdd(&bin_counts[key + binOffset], 1);
+    T index = atomic_add_helper(&bin_counts[key + binOffset], 1);
     bins[index * NUM_BUCKETS + key + binStart] = vid; // put into hash bin
   }
   __syncwarp();

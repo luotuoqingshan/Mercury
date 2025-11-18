@@ -33,7 +33,7 @@ typedef uint8_t label_t;   // label type
 typedef uint8_t vlabel_t;  // vertex label type
 typedef uint16_t elabel_t; // edge label type
 typedef uint8_t cmap_vt;   // cmap value type
-typedef int32_t vidType;   // vertex ID type
+typedef int64_t vidType;   // vertex ID type
 typedef int64_t eidType;   // edge ID type
 typedef int32_t IndexT;
 typedef uint64_t emb_index_t; // embedding index type

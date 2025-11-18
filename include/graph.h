@@ -144,7 +144,7 @@ public:
   bool is_freq_vertex(vidType v, int minsup);
   vidType get_max_label_frequency() const { return max_label_frequency_; }
   const nlf_map* getVertexNLF(const vidType id) const { return &nlf_[id]; }
-  int *get_label_freq_ptr() { return labels_frequency_.data(); }
+  vidType *get_label_freq_ptr() { return labels_frequency_.data(); }
   vidType getLabelsFrequency(vlabel_t label) const { return labels_frequency_.at(label); }
   const vidType* getVerticesByLabel(vlabel_t vl, vidType& count) const {
     auto start = reverse_index_offsets_[vl];

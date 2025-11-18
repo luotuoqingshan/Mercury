@@ -3,7 +3,7 @@
 // Hash Table for large degree
 __global__ void __launch_bounds__(256)
     hashIndex_for_large_degree(GraphGPU g, AccType *total, int *global_index,
-                               int *large_tasks, int n_large_task, vidType bucket_num, vidType bucket_size, vidType *hash_bucket)
+                               vidType *large_tasks, int n_large_task, vidType bucket_num, vidType bucket_size, vidType *hash_bucket)
 {
   __shared__ vidType bucket_count[1024];
   extern __shared__ vidType shared_bucket[];
@@ -38,7 +38,7 @@ __global__ void __launch_bounds__(256)
     {
       auto uid = g.getEdgeDst(eid + start);
       vidType bin = uid % bucket_num;
-      vidType index = atomicAdd(&bucket_count[bin], 1);
+      vidType index = (vidType)atomicAdd((unsigned long long*)&bucket_count[bin], 1ULL);
       hash_bucket_cta[bin * bucket_size + index] = uid;
     }
     __syncthreads();
@@ -193,7 +193,7 @@ __global__ void __launch_bounds__(256)
 
 // Binary search for small degree
 __global__ void __launch_bounds__(256)
-    binarySearch_for_small_degree(GraphGPU g, AccType *total, int *global_index, int *small_tasks, int n_small_tasks)
+    binarySearch_for_small_degree(GraphGPU g, AccType *total, int *global_index, vidType *small_tasks, int n_small_tasks)
 {
   __shared__ vidType shd_src[256 / WARP_SIZE * DEG_THD];
   unsigned long long __shared__ G_counter;
@@ -218,9 +218,9 @@ __global__ void __launch_bounds__(256)
   {
 
     vidType vid = small_tasks[task_id];
-    int start = g.edge_begin(vid);
-    int end = g.edge_end(vid);
-    int degree = end - start;
+    eidType start = g.edge_begin(vid);
+    eidType end = g.edge_end(vid);
+    eidType degree = end - start;
 
     // load V'neighbours to shared memory
     if (degree <= DEG_THD)
@@ -245,7 +245,7 @@ __global__ void __launch_bounds__(256)
       for (auto w_idx = thread_lane + w_start; w_idx < w_end; w_idx += WARP_SIZE)
       {
         vidType wid = g.getEdgeDst(w_idx);
-        P_counter += binary_search(shared_search_list, wid, degree);
+        P_counter += binary_search(shared_search_list, wid, (vidType)degree);
       }
     }
 #endif
@@ -279,7 +279,7 @@ __global__ void __launch_bounds__(256)
       if (u_idx < u_end)
       {
         vidType wid = g.getEdgeDst(w_start + workid);
-        P_counter += binary_search(shared_search_list, wid, degree);
+        P_counter += binary_search(shared_search_list, wid, (vidType)degree);
       }
       __syncwarp();
 

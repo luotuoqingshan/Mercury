@@ -206,6 +206,13 @@ void Graph::orientation_with_division(int DEG_THD) {
   #pragma omp parallel for
   for (vidType src = 0; src < n_vertices; src ++) {
     for (auto dst : N(src)) {
+      // Bounds check to prevent segfault - dst must be valid vertex ID
+      if (dst >= n_vertices || dst < 0) {
+        fprintf(stderr, "ERROR: Invalid vertex ID %ld in edge list (n_vertices=%ld, src=%ld)\n", 
+                (long)dst, (long)n_vertices, (long)src);
+        fprintf(stderr, "This suggests the graph binary files may have been created with 32-bit types but are being read as 64-bit.\n");
+        exit(1);
+      }
       if (degrees[dst] > degrees[src] ||
           (degrees[dst] == degrees[src] && dst > src)) {
         new_degrees[src]++;
@@ -434,8 +441,8 @@ void Graph::BuildReverseIndex() {
   }
 }
 
-#pragma omp declare reduction(vec_plus : std::vector<int> : \
-    std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<int>())) \
+#pragma omp declare reduction(vec_plus : std::vector<vidType> : \
+    std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<vidType>())) \
     initializer(omp_priv = decltype(omp_orig)(omp_orig.size()))
 void Graph::computeLabelsFrequency() {
   printf("=========================step1:%d   %d = = == \n",num_vertex_classes, max_label);

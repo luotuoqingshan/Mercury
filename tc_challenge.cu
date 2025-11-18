@@ -19,9 +19,9 @@ void TCSolver(Graph &g, uint64_t &total)
 
   int n_small_tasks = 0, n_large_tasks = 0;
   ;
-  int *small_tasks = (int *)malloc(sizeof(int) * nv);
-  int *large_tasks = (int *)malloc(sizeof(int) * nv);
-  for (int i = 0; i < nv; i++)
+  vidType *small_tasks = (vidType *)malloc(sizeof(vidType) * nv);
+  vidType *large_tasks = (vidType *)malloc(sizeof(vidType) * nv);
+  for (vidType i = 0; i < nv; i++)
   {
     auto e_start = g.small_edge_begin(i);
     auto e_end = g.small_edge_end(i);
@@ -32,7 +32,7 @@ void TCSolver(Graph &g, uint64_t &total)
       n_small_tasks++;
     }
   }
-  for (int i = 0; i < nv; i++)
+  for (vidType i = 0; i < nv; i++)
   {
     auto e_start = g.large_edge_begin(i);
     auto e_end = g.large_edge_end(i);
@@ -44,13 +44,13 @@ void TCSolver(Graph &g, uint64_t &total)
       n_large_tasks++;
     }
   }
-  int *d_small_tasks;
-  CUDA_SAFE_CALL(cudaMalloc((void **)&d_small_tasks, sizeof(int) * nv));
-  CUDA_SAFE_CALL(cudaMemcpy(d_small_tasks, small_tasks, sizeof(int) * nv, cudaMemcpyHostToDevice));
+  vidType *d_small_tasks;
+  CUDA_SAFE_CALL(cudaMalloc((void **)&d_small_tasks, sizeof(vidType) * nv));
+  CUDA_SAFE_CALL(cudaMemcpy(d_small_tasks, small_tasks, sizeof(vidType) * nv, cudaMemcpyHostToDevice));
 
-  int *d_large_tasks;
-  CUDA_SAFE_CALL(cudaMalloc((void **)&d_large_tasks, sizeof(int) * nv));
-  CUDA_SAFE_CALL(cudaMemcpy(d_large_tasks, large_tasks, sizeof(int) * nv, cudaMemcpyHostToDevice));
+  vidType *d_large_tasks;
+  CUDA_SAFE_CALL(cudaMalloc((void **)&d_large_tasks, sizeof(vidType) * nv));
+  CUDA_SAFE_CALL(cudaMemcpy(d_large_tasks, large_tasks, sizeof(vidType) * nv, cudaMemcpyHostToDevice));
 
   g.print_meta_data();
   // size_t memsize = print_device_info(0);
