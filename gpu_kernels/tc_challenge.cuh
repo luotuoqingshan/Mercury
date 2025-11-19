@@ -9,7 +9,9 @@ __global__ void __launch_bounds__(256)
   extern __shared__ vidType shared_bucket[];
 
   vidType *hash_bucket_cta;
-  hash_bucket_cta = hash_bucket + blockIdx.x * bucket_num * bucket_size;
+  size_t per_cta_elems = (size_t)bucket_num * (size_t)bucket_size;
+  size_t cta_offset    = per_cta_elems * (size_t)blockIdx.x;
+  hash_bucket_cta      = hash_bucket + cta_offset;
   unsigned long long __shared__ G_counter;
   if (threadIdx.x == 0)
     G_counter = 0;
@@ -27,6 +29,7 @@ __global__ void __launch_bounds__(256)
     eidType start = g.edge_begin(vertex_id);
     eidType end = g.edge_end(vertex_id);
     eidType degree = end - start;
+    assert(degree <= (eidType)bucket_num * (eidType)bucket_size);
 
     eidType now = start + threadIdx.x;
 
@@ -39,6 +42,7 @@ __global__ void __launch_bounds__(256)
       auto uid = g.getEdgeDst(eid + start);
       vidType bin = uid % bucket_num;
       vidType index = (vidType)atomicAdd((unsigned long long*)&bucket_count[bin], 1ULL);
+      assert(index < bucket_size);
       hash_bucket_cta[bin * bucket_size + index] = uid;
     }
     __syncthreads();
