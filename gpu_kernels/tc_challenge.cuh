@@ -5,7 +5,7 @@ __global__ void __launch_bounds__(256)
     hashIndex_for_large_degree(GraphGPU g, AccType *total, int *global_index,
                                vidType *large_tasks, int n_large_task, vidType bucket_num, vidType bucket_size, vidType *hash_bucket)
 {
-  __shared__ vidType bucket_count[1024];
+  __shared__ unsigned int bucket_count[1024];
   extern __shared__ vidType shared_bucket[];
 
   vidType *hash_bucket_cta;
@@ -41,7 +41,7 @@ __global__ void __launch_bounds__(256)
     {
       auto uid = g.getEdgeDst(eid + start);
       vidType bin = uid % bucket_num;
-      vidType index = (vidType)atomicAdd((unsigned long long*)&bucket_count[bin], 1ULL);
+      unsigned int index = atomicAdd(&bucket_count[bin], 1u);
       assert(index < bucket_size);
       hash_bucket_cta[bin * bucket_size + index] = uid;
     }
